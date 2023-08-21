@@ -1,6 +1,7 @@
 "use client";
 import React, { ChangeEvent, useState } from "react";
 
+import * as z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -18,9 +19,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { UserValidation } from "@/lib/validations/user";
 import Image from "next/image";
-import { z } from "zod";
 import { isBase64Image } from "@/lib/utils";
-import {useUploadThing} from "@/lib/uploadthing";
+import { useUploadThing } from "@/lib/uploadthing";
+import { usePathname, useRouter } from "next/navigation";
+import { updateUser } from "@/lib/actions/user.actions";
 
 interface Props {
   user: {
@@ -35,8 +37,10 @@ interface Props {
 }
 
 const AccountProfile = ({ user, btnTitle }: Props) => {
-  const [files, setFiles] = useState<File[]>([])
-  const {startUpload} = useUploadThing("media")
+  const [files, setFiles] = useState<File[]>([]);
+  const { startUpload } = useUploadThing("media");
+  const router = useRouter();
+  const pathname = usePathname();
 
   const form = useForm({
     resolver: zodResolver(UserValidation),
@@ -54,41 +58,52 @@ const AccountProfile = ({ user, btnTitle }: Props) => {
   ) => {
     e.preventDefault();
 
-    const fileReader = new FileReader()
-    if(e.target.files && e.target.isDefaultNamespace.length > 0) {
-      const file = e.target.files[0]
-      
-      setFiles(Array.from(e.target.files))
+    const fileReader = new FileReader();
+    if (e.target.files && e.target.isDefaultNamespace.length > 0) {
+      const file = e.target.files[0];
 
-      if(!file.type.includes('image')) return
+      setFiles(Array.from(e.target.files));
+
+      if (!file.type.includes("image")) return;
 
       fileReader.onload = async (event) => {
-        const imageDataUrl = event.target?.result?.toString() || ''
+        const imageDataUrl = event.target?.result?.toString() || "";
 
-        fieldChange(imageDataUrl)
-      }
+        fieldChange(imageDataUrl);
+      };
 
-      fileReader.readAsDataURL(file)
+      fileReader.readAsDataURL(file);
     }
   };
 
   const onSubmit = async (values: z.infer<typeof UserValidation>) => {
-    const blob = values.profile_photo
+    const blob = values.profile_photo;
 
-    const hasImageChanged = isBase64Image(blob)
+    const hasImageChanged = isBase64Image(blob);
 
-    if(hasImageChanged) {
-      const imgRes = await startUpload(files)
+    if (hasImageChanged) {
+      const imgRes = await startUpload(files);
 
-      if(imgRes && imgRes[0].fileUrl) {
-        values.profile_photo = imgRes[0].fileUrl
+      if (imgRes && imgRes[0].fileUrl) {
+        values.profile_photo = imgRes[0].fileUrl;
       }
     }
 
-    // TODO: Update user
-    
-  }
+    await updateUser({
+      userId: user.id,
+      username: values.username,
+      name: values.name,
+      bio: values.bio,
+      image: values.profile_photo,
+      path: pathname,
+    });
 
+    if (pathname === "/profile/edit") {
+      router.back();
+    } else {
+      router.push("/");
+    }
+  };
   return (
     <Form {...form}>
       <form
@@ -129,6 +144,7 @@ const AccountProfile = ({ user, btnTitle }: Props) => {
                   onChange={(e) => handleImage(e, field.onChange)}
                 />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
@@ -148,6 +164,7 @@ const AccountProfile = ({ user, btnTitle }: Props) => {
                   {...field}
                 />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
@@ -167,6 +184,7 @@ const AccountProfile = ({ user, btnTitle }: Props) => {
                   {...field}
                 />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
@@ -186,6 +204,7 @@ const AccountProfile = ({ user, btnTitle }: Props) => {
                   {...field}
                 />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
