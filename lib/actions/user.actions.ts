@@ -57,3 +57,5 @@ export async function fetchUser(userId: string) {
     throw new Error(`Failed to create/update user: ${error.message}`)
   }
 }
+
+
