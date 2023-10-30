@@ -104,7 +104,12 @@ export async function fetchThreadById(id: string) {
   }
 }
 
-export async function addCommentToThread(threadId: string, commentText: string, userId: string, path: string,) {
+export async function addCommentToThread(
+  threadId: string, 
+  commentText: string, 
+  userId: string, 
+  path: string,
+  ) {
   connectToDatabase()
 
   try {
