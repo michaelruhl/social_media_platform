@@ -9,12 +9,13 @@ import ThreadCard from "@/components/cards/ThreadCard";
 
 export default async function Home() {
   const result = await fetchPosts(1, 30);
-  const reverse = result.posts.reverse();
+  const reverse = [...result.posts].reverse();
 
   const user = await currentUser();
   if (!user) return null;
   return (
     <>
+    {console.log(result.posts)}
       <h1 className="head-text text-left">Home</h1>
 
       <section className="mt-9 flex flex-col gap-10">
@@ -22,7 +23,7 @@ export default async function Home() {
           <p className="no-result">No posts found</p>
         ) : (
           <>
-            {reverse.map((post) => (
+            {result.posts.map((post) => (
               <ThreadCard
                 key={post._id}
                 id={post._id}
